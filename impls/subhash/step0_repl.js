@@ -1,4 +1,9 @@
-const { stdin, stdout } = require('process');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 const read = (str) => str;
 
@@ -8,8 +13,10 @@ const print = (str) => str;
 
 const rep = (str) => print(eval(read(str)));
 
-stdout.write("user> ");
-stdin.on('data', (data) => {
-  stdout.write(rep(data));
-  stdout.write("user> ");
-});
+const repl = () =>
+  rl.question('user> ', line => {
+    console.log(rep(line));
+    repl();
+  });
+
+repl();
