@@ -43,8 +43,14 @@ class MalVector extends MalValue {
     return this.value.length === 0;
   }
 
+  printer(x) {
+    if (x instanceof MalValue)
+      return x.pr_str();
+    return x.toString();
+  }
+
   pr_str() {
-    return '[' + this.value.map(x => x.toString).join(' ') + ']';
+    return '[' + this.value.map(x => this.printer(x)).join(' ') + ']';
   }
 }
 
