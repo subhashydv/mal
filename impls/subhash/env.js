@@ -1,8 +1,19 @@
 class Env {
   #outer
-  constructor(outer) {
+  constructor(outer, binds, exprs) {
     this.#outer = outer;
+    this.binds = binds;
+    this.exprs = exprs;
     this.data = {};
+    this.doBinding();
+  }
+
+  doBinding() {
+    if (this.exprs) {
+      this.binds.forEach((binding, i) => {
+        this.set(binding, this.exprs[i]);
+      });
+    }
   }
 
   set(symbol, malValue) {
