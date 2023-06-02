@@ -1,7 +1,7 @@
 const readline = require('readline');
 const { reader_str } = require('./reader');
 const { pr_str } = require('./printer');
-const { MalSymbol, MalList, MalVector, MalNil, MalValue, } = require('./types');
+const { MalSymbol, MalList, MalVector, MalNil, MalString, MalValue, MalKeyword } = require('./types');
 const { Env } = require('./env');
 const { coreMethod } = require('./core.js');
 
@@ -14,6 +14,14 @@ const rl = readline.createInterface({
 const eval_ast = (ast, env) => {
   if (ast instanceof MalSymbol) {
     return env.get(ast);
+  }
+
+  if (ast instanceof MalString) {
+    return ast.value;
+  }
+
+  if (ast instanceof MalKeyword) {
+    return ast.value;
   }
 
   if (ast instanceof MalList) {
@@ -83,7 +91,7 @@ const eval = (ast, env) => {
       env.set(ast.value[1], eval(ast.value[2], env));
       return env.get(ast.value[1]);
     case 'let*':
-      handleLet(ast, env);
+      return handleLet(ast, env);
     case 'do':
       return handleDo(ast.value.slice(1), env);
     case 'if':
@@ -98,9 +106,19 @@ const eval = (ast, env) => {
 
 const print = (malValue) => pr_str(malValue);
 
+const getValue = (arg) => {
+  if (arg instanceof MalValue) {
+    return arg.pr_str();
+  }
+  return arg;
+}
+
 const env = new Env();
+coreMethod['not'] = (arg) =>
+  rep(`((fn* [x] (if x false true)) ${getValue(arg)})`);
 Object.keys(coreMethod).forEach(key =>
   env.set(new MalSymbol(key), coreMethod[key]));
+
 const rep = (str) => print(eval(read(str), env));
 
 const repl = () =>

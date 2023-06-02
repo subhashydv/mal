@@ -1,4 +1,4 @@
-const { MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalKeyword }
+const { MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalKeyword, MalString }
   = require("./types.js");
 
 class Reader {
@@ -59,7 +59,9 @@ const read_hashMap = (reader) => {
 
 const read_atom = (reader) => {
   const token = reader.next();
-  if (token.startsWith(':')) new MalKeyword(token);
+  if (token.startsWith(':')) {
+    return new MalKeyword(token)
+  };
 
   if (token.match(/^-?[0-9]+$/)) {
     return parseInt(token);
@@ -79,6 +81,10 @@ const read_atom = (reader) => {
 
   if (token == '\'') {
     return '\'';
+  }
+
+  if (token.match(/"*"/)) {
+    return new MalString(token);
   }
 
   return new MalSymbol(token);
