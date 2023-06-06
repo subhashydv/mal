@@ -44,7 +44,7 @@ const coreMethod = {
   '>': (a, b) => a > b,
   '<=': (a, b) => a <= b,
   '>=': (a, b) => a >= b,
-  '=': (a, b) => deepEqual(a, b),
+  '=': (a, b) => a.equals(b),
   '+': (...args) => args.reduce((x, y) => x + y, 0),
   '*': (...args) => args.reduce((x, y) => x * y, 1),
   '-': (...args) => args.reduce((x, y) => x - y),

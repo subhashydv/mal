@@ -15,10 +15,6 @@ const eval_ast = (ast, env) => {
     return env.get(ast);
   }
 
-  if (ast instanceof MalString) {
-    return ast.value;
-  }
-
   if (ast instanceof MalKeyword) {
     return ast.value;
   }
@@ -144,6 +140,7 @@ const eval = (ast, env) => {
         break;
       default:
         const [fn, ...args] = eval_ast(ast, env).value;
+        console.log('hello : ', fn, args);
         if (fn instanceof MalFunction) {
           ast = fn.value;
           oldEnv = fn.env;
