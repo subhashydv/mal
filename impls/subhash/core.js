@@ -70,14 +70,16 @@ const coreMethod = {
     }
     return reader_str(string)
   },
-  'slurp': (filename) => {
-    return new MalString(fs.readFileSync(filename, 'utf8'));
-  },
+  'slurp': (filename) => new MalString(fs.readFileSync(filename, 'utf8')),
   'atom': (args) => new MalAtom(args),
   'atom?': (args) => args instanceof MalAtom,
   'deref': (args) => args.deref(),
   'reset!': (atom, newValue) => atom.reset(newValue),
   'swap!': (atom, f, ...args) => atom.swap(f, args),
+  'cons': (value, list) => new MalList([value, ...list.value]),
+  'concat': (...lists) => new MalList(lists.flatMap(x => x.value)),
+  'vec': (args) => new MalVector(args.value),
+  "*ARGV*": new MalList(process.argv.slice(2)),
 }
 
 module.exports = { coreMethod };

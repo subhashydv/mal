@@ -1,6 +1,6 @@
 const createMalString = (str) => {
-  return str.replace(/\\(.)/g, (y, captured) =>
-    captured == "n" ? "\n" : captured);
+  return new MalString(str.replace(/\\(.)/g, (y, captured) =>
+    captured == "n" ? "\n" : captured));
 };
 
 const prStr = (malValue, printReadably = true) => {
@@ -32,35 +32,15 @@ class MalValue {
   }
 }
 
-class MalSymbol extends MalValue {
+class MalSeq extends MalValue {
   constructor(value) {
     super(value)
   }
 }
 
-class MalAtom extends MalValue {
+class MalSymbol extends MalValue {
   constructor(value) {
     super(value)
-  }
-
-  pr_str() {
-    return '(atom ' + super.pr_str() + ')';
-  }
-
-  deref() {
-    return this.value;
-  }
-
-  reset(resetValue) {
-    this.value = resetValue;
-    return this.value;
-  }
-
-  swap(f, args) {
-    // console.log('f : ', f);
-    // console.log('args : ', args);
-    this.value = f.apply(null, [this.value, ...args]);
-    return this.value;
   }
 }
 
@@ -80,19 +60,13 @@ class MalKeyword extends MalValue {
   }
 }
 
-class MalList extends MalValue {
+class MalList extends MalSeq {
   constructor(value) {
     super(value)
   }
 
   isEmpty() {
     return this.value.length === 0;
-  }
-
-  printer(x) {
-    if (x instanceof MalValue)
-      return x.pr_str();
-    return x.toString();
   }
 
   pr_str() {
@@ -100,7 +74,9 @@ class MalList extends MalValue {
   }
 }
 
-class MalVector extends MalValue {
+
+
+class MalVector extends MalSeq {
   constructor(value) {
     super(value)
   }
@@ -109,14 +85,9 @@ class MalVector extends MalValue {
     return this.value.length === 0;
   }
 
-  printer(x) {
-    if (x instanceof MalValue)
-      return x.pr_str();
-    return x.toString();
-  }
 
   pr_str() {
-    return '[' + this.value.map(x => this.printer(x)).join(' ') + ']';
+    return '[' + this.value.map(x => prStr(x)).join(' ') + ']';
   }
 }
 
@@ -126,7 +97,7 @@ class MalHashMap extends MalValue {
   }
 
   pr_str() {
-    return '{' + this.value.map(x => x.pr_str()).join(' ') + '}';
+    return '{' + this.value.map(x => prStr(x)).join(' ') + '}';
   }
 }
 
@@ -157,4 +128,28 @@ class MalFunction extends MalValue {
   }
 }
 
-module.exports = { MalSymbol, MalList, MalVector, MalValue, MalNil, MalHashMap, MalKeyword, MalString, MalFunction, createMalString, prStr, MalAtom };
+class MalAtom extends MalValue {
+  constructor(value) {
+    super(value)
+  }
+
+  pr_str() {
+    return '(atom ' + super.pr_str() + ')';
+  }
+
+  deref() {
+    return this.value;
+  }
+
+  reset(resetValue) {
+    this.value = resetValue;
+    return this.value;
+  }
+
+  swap(f, args) {
+    this.value = f.apply(null, [this.value, ...args]);
+    return this.value;
+  }
+}
+
+module.exports = { MalSymbol, MalList, MalVector, MalValue, MalNil, MalHashMap, MalKeyword, MalString, MalFunction, createMalString, prStr, MalAtom, MalSeq };

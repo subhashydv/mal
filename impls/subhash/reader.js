@@ -1,11 +1,5 @@
 const { MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalKeyword, MalString, createMalString }
   = require("./types.js");
-
-class CommentException extends Error {
-  constructor(eMsg) {
-    super(eMsg);
-  }
-}
 class Reader {
   constructor(tokens) {
     this.tokens = tokens;
@@ -85,10 +79,6 @@ const read_atom = (reader) => {
     return new MalNil();
   }
 
-  if (token == '\'') {
-    return '\'';
-  }
-
   if (token.startsWith('"')) {
     return createMalString(token.slice(1, -1));
   }
@@ -96,10 +86,17 @@ const read_atom = (reader) => {
   return new MalSymbol(token);
 };
 
+const prependSymbol = (reader, symbol) => {
+  reader.next();
+  const prepend_symbol = new MalSymbol(symbol);
+  const newAst = read_form(reader);
+  return new MalList([prepend_symbol, newAst]);
+}
+
 const read_form = (reader) => {
   const token = reader.peek();
 
-  switch (token[0]) {
+  switch (token) {
     case '(':
       return read_list(reader);
     case '[':
@@ -109,6 +106,16 @@ const read_form = (reader) => {
     case ';':
       reader.next();
       return new MalNil();
+    case '\'':
+      return prependSymbol(reader, "quote");
+    case '`':
+      return prependSymbol(reader, "quasiquote");
+    case '~':
+      return prependSymbol(reader, "unquote");
+    case '@':
+      return prependSymbol(reader, "deref");
+    case '~@':
+      return prependSymbol(reader, "splice-unquote");
     default:
       return read_atom(reader);
   }

@@ -8,6 +8,7 @@ class Env {
   }
 
   doBinding() {
+    console.log(this.binds, this.exprs);
     if (this.exprs) {
       this.binds.forEach((binding, i) => {
         this.set(binding, this.exprs[i]);

@@ -1,6 +1,6 @@
 const readline = require('readline');
 const { reader_str } = require('./reader');
-const { MalSymbol, MalList, MalVector, MalNil, MalString, MalValue, MalKeyword, MalFunction, prStr } = require('./types');
+const { MalSymbol, MalList, MalVector, MalNil, MalString, MalValue, MalKeyword, MalFunction, prStr, MalSeq } = require('./types');
 const { Env } = require('./env');
 const { coreMethod } = require('./core.js');
 
@@ -72,22 +72,46 @@ const handleIf = (ast, env) => {
   return truthy;
 }
 
-// const handleFn = (ast, env) => {
-//   const [binds, ...body] = ast.value.slice(1);
-//   const doForms = new MalList([new MalSymbol('do'), ...body]);
-//   return new MalFunction(doForms, binds, env);
-// };
-
 const handleFn = (ast, env) => {
   const [binds, ...body] = ast.value.slice(1);
   const doForms = new MalList([new MalSymbol('do'), ...body]);
   const fn = (...expres) => {
-    const fnEnv = new Env(env, binds.value, expres,);
+    const fnEnv = new Env(env, binds.value, expres);
     return eval(doForms, fnEnv);
   };
 
   return new MalFunction(doForms, binds, env, fn);
 };
+
+const quasiquote = (ast) => {
+  if (ast instanceof MalList
+    && ast.value.length > 0
+    && ast.value[0].value === 'unquote') {
+    return ast.value[1];
+  }
+  if (ast instanceof MalSeq) {
+    let result = new MalList([]);
+    for (let index = ast.value.length - 1; index >= 0; index--) {
+      const element = ast.value[index];
+      if (element instanceof MalList
+        && element.value.length > 0
+        && element.value[0].value === 'splice-unquote') {
+        result = new MalList([new MalSymbol("concat"), element.value[1], result]);
+      } else {
+        result = new MalList([new MalSymbol("cons"), quasiquote(element), result]);
+      }
+    }
+    if (ast instanceof MalList) {
+      return result;
+    }
+    return new MalList([new MalSymbol("vec"), result]);
+  }
+
+  if (ast instanceof MalSymbol) {
+    return new MalList([new MalSymbol("quote"), ast]);
+  }
+  return ast;
+}
 
 const eval = (ast, env) => {
   while (true) {
@@ -110,6 +134,13 @@ const eval = (ast, env) => {
         break;
       case 'fn*':
         ast = handleFn(ast, env);
+        break;
+      case 'quote':
+        return ast.value[1];
+      case 'quasiquoteexpand':
+        return quasiquote(ast.value[1], env);
+      case 'quasiquote':
+        ast = quasiquote(ast.value[1], env);
         break;
       default:
         const [fn, ...args] = eval_ast(ast, env).value;
@@ -166,3 +197,5 @@ if (process.argv.length >= 3) {
 } else {
   repl();
 }
+
+
