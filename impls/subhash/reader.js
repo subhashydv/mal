@@ -1,6 +1,11 @@
-const { MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalKeyword, MalString }
+const { MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalKeyword, MalString, createMalString }
   = require("./types.js");
 
+class CommentException extends Error {
+  constructor(eMsg) {
+    super(eMsg);
+  }
+}
 class Reader {
   constructor(tokens) {
     this.tokens = tokens;
@@ -59,6 +64,7 @@ const read_hashMap = (reader) => {
 
 const read_atom = (reader) => {
   const token = reader.next();
+
   if (token.startsWith(':')) {
     return new MalKeyword(token)
   };
@@ -83,8 +89,8 @@ const read_atom = (reader) => {
     return '\'';
   }
 
-  if (token.match(/"*"/)) {
-    return new MalString(token);
+  if (token.startsWith('"')) {
+    return createMalString(token.slice(1, -1));
   }
 
   return new MalSymbol(token);
@@ -93,13 +99,16 @@ const read_atom = (reader) => {
 const read_form = (reader) => {
   const token = reader.peek();
 
-  switch (token) {
+  switch (token[0]) {
     case '(':
       return read_list(reader);
     case '[':
       return read_vector(reader);
     case '{':
       return read_hashMap(reader);
+    case ';':
+      reader.next();
+      return new MalNil();
     default:
       return read_atom(reader);
   }

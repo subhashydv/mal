@@ -1,5 +1,6 @@
-const { pr_str } = require("./printer");
-const { MalList, MalNil, MalVector, MalValue } = require("./types");
+const { reader_str } = require("./reader");
+const { MalList, MalNil, MalVector, MalValue, MalString, MalAtom, prStr } = require("./types");
+const fs = require('fs');
 
 const listCount = (list) => {
   if (list instanceof MalValue) {
@@ -7,10 +8,11 @@ const listCount = (list) => {
   }
 };
 
-const prn = (args, append = '') => {
-  console.log(args.map(pr_str).join(' ') + append);
-  return new MalNil;
-}
+const print = (args, printReadably) => {
+  console.log(...args.map((arg) => prStr(arg, printReadably)));
+  return new MalNil();
+};
+
 
 const areBothArrays = (element1, element2) => {
   return Array.isArray(element1) && Array.isArray(element2);
@@ -52,9 +54,30 @@ const coreMethod = {
   'count': listCount,
   'list?': (args) => args instanceof MalList,
   'empty?': (args) => listCount(args) === 0,
-  'prn': (...args) => prn(args),
-  'pr-str': (...args) => prn(args),
-  'println': (...args) => prn(args, '\n'),
+  'prn': (...args) => print(args, true),
+  'println': (...args) => print(args, false),
+  'pr-str': (...args) => {
+    const str = args.map((arg) => prStr(arg, true)).join(' ');
+    return new MalString(str);
+  },
+  'str': (...args) => {
+    const str = args.map((arg) => prStr(arg, false)).join('');
+    return new MalString(str);
+  },
+  'read-string': (string) => {
+    if (string instanceof MalString) {
+      return reader_str(string.value);
+    }
+    return reader_str(string)
+  },
+  'slurp': (filename) => {
+    return new MalString(fs.readFileSync(filename, 'utf8'));
+  },
+  'atom': (args) => new MalAtom(args),
+  'atom?': (args) => args instanceof MalAtom,
+  'deref': (args) => args.deref(),
+  'reset!': (atom, newValue) => atom.reset(newValue),
+  'swap!': (atom, f, ...args) => atom.swap(f, args),
 }
 
 module.exports = { coreMethod };
