@@ -66,6 +66,24 @@ class MalSeq extends MalValue {
   constructor(value) {
     super(value)
   }
+
+  nth(n) {
+    if (n >= this.value.length) {
+      throw "index out of range"
+    }
+    return this.value[n];
+  }
+
+  first() {
+    if (this.value.length == 0) {
+      return new MalNil();
+    }
+    return this.value[0];
+  }
+
+  rest() {
+    return new MalList(this.value.slice(1));
+  }
 }
 
 class MalSymbol extends MalValue {
@@ -166,14 +184,19 @@ class MalNil extends MalValue {
     return otherMalNil instanceof MalNil
       && deepEqual(this.value, otherMalNil.value);
   }
+
+  rest() {
+    return '()';
+  }
 }
 
 class MalFunction extends MalValue {
-  constructor(ast, binds, env, fn) {
+  constructor(ast, binds, env, fn, isMacro = false) {
     super(ast);
     this.binds = binds;
     this.env = env;
     this.fn = fn;
+    this.isMacro = isMacro;
   }
 
   pr_str() {
